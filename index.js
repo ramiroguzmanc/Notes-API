@@ -1,12 +1,12 @@
 // import http from 'http'
 // const http = require("http");
-const express = require('express')
-const cors = require('cors')
+import express, { json } from 'express'
+import cors from 'cors'
 const app = express()
 
 app.use(cors())
 // Esto es necesario para la petición POST
-app.use(express.json())
+app.use(json())
 
 let notes = [
   {
