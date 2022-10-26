@@ -1,0 +1,39 @@
+
+###Creando una nota con todos sus campos 
+
+POST http://localhost:3001/api/notes
+Content-Type: application/json
+
+{
+    "content": "Esta es mi nueva nota desde rest",
+    "important": true
+}
+
+
+### Crear una nota sin el campo important
+
+POST http://localhost:3001/api/notes
+Content-Type: application/json
+
+{
+    "content": "Esta es mi nueva nota desde rest"
+}
+
+
+### Crear una nota sin contenido
+
+POST http://localhost:3001/api/notes
+Content-Type: application/json
+
+{
+    "important": true
+}
+
+
+### Crear una nota sin nada
+
+POST http://localhost:3001/api/notes
+Content-Type: application/json
+
+{
+}
