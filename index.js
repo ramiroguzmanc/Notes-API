@@ -1,46 +1,31 @@
-// import http from 'http'
-// const http = require("http");
+// Como los módulos se cachean, al importar './mongo', ejecutamos la conexión a la BD
+import './mongo.js'
 import express, { json } from 'express'
 import cors from 'cors'
-const app = express()
+import { Note } from './models/Note.js'
 
+const app = express()
 app.use(cors())
 // Esto es necesario para la petición POST
 app.use(json())
 
-let notes = [
-  {
-    id: 1,
-    content: 'Me tengo que suscribir a @midudev en YouTube',
-    date: '2019-05-30T17:30:31.098Z',
-    important: true
-  },
-  {
-    id: 2,
-    content: 'Tengo que estudiar las clases del FullStack Bootcamp',
-    date: '2019-05-30T18:39:34.091Z',
-    important: false
-  },
-  {
-    id: 3,
-    content: 'Repasar los retos de JS de midudev',
-    date: '2019-05-30T19:20:14.298Z',
-    important: true
-  }
-]
-
-// const app = http.createServer((request, response) => {
-//   response.writeHead(200, { "content-type": "application/json" });
-//   response.end(JSON.stringify({ name: "Rama", lastName: "Guzmán" }));
-// });
+let notes = [{}]
 
 app.get('/', (req, res) => {
   res.send('<h1>Hello world! My API is working</h1>')
 })
 
 // Obtener todas las notas
-app.get('/api/notes', (req, res) => {
-  res.json(notes)
+app.get('/api/notes', async (req, res) => {
+  try {
+    const notes = await Note.find({})
+    res.json(notes)
+  } catch (error) {
+    console.error(error)
+  }
+  // .then(notes => {
+  //   res.json(notes)
+  // }).catch(err => console.error(err))
 })
 
 // Obtener una nota
