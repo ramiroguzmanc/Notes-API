@@ -1,8 +1,10 @@
+import * as dotenv from 'dotenv'
 // Como los módulos se cachean, al importar './mongo', ejecutamos la conexión a la BD
 import './mongo.js'
 import express, { json } from 'express'
 import cors from 'cors'
 import { Note } from './models/Note.js'
+dotenv.config()
 
 const app = express()
 app.use(cors())
@@ -90,7 +92,7 @@ app.use((req, res) => {
   res.status(404).json({ error: 'Not found' })
 })
 
-const PORT = 3001
+const PORT = process.env.PORT
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
 })

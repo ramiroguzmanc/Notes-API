@@ -1,9 +1,7 @@
 import mongoose from 'mongoose'
-
-const password = 'Letmein123'
-const DBName = 'ramirogDB'
-
-const connectionString = `mongodb+srv://ramirogdb:${password}@cluster0.xlbdosq.mongodb.net/${DBName}?retryWrites=true&w=majority`
+import * as dotenv from 'dotenv'
+dotenv.config()
+const connectionString = process.env.MONGO_DB_URI
 
 // MongoDB Connection
 
