@@ -2,6 +2,8 @@ import * as dotenv from 'dotenv'
 // Como los módulos se cachean, al importar './mongo', ejecutamos la conexión a la BD
 import './mongo.js'
 import express, { json } from 'express'
+import * as Sentry from '@sentry/node'
+import * as Tracing from '@sentry/tracing'
 import cors from 'cors'
 import { Note } from './models/Note.js'
 import { notFound } from './middleware/notFound.js'
@@ -12,6 +14,25 @@ const app = express()
 app.use(cors())
 // Esto es necesario para la petición POST
 app.use(json())
+
+Sentry.init({
+  dsn: 'https://2e64b0f387ae4735bccc317f9b549ee6@o4504066916024320.ingest.sentry.io/4504066918383616',
+  integrations: [
+    // enable HTTP calls tracing
+    new Sentry.Integrations.Http({ tracing: true }),
+    // enable Express.js middleware tracing
+    new Tracing.Integrations.Express({ app })
+  ],
+
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for performance monitoring.
+  // We recommend adjusting this value in production
+  tracesSampleRate: 1.0
+})
+
+app.use(Sentry.Handlers.requestHandler())
+// TracingHandler creates a trace for every incoming request
+app.use(Sentry.Handlers.tracingHandler())
 
 app.get('/', (req, res) => {
   res.send('<h1>Hello world! My API is working</h1>')
@@ -97,10 +118,11 @@ app.put('/api/notes', async (req, res, next) => {
 })
 
 // Middleware
-app.use(handleErrors)
 app.use(notFound)
+app.use(Sentry.Handlers.errorHandler())
+app.use(handleErrors)
 
 const PORT = process.env.PORT
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`)
+  console.log(`Server running on http://localhost:${PORT}`)
 })
