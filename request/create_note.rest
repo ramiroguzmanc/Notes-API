@@ -16,7 +16,7 @@ POST http://localhost:3001/api/notes
 Content-Type: application/json
 
 {
-    "content": "Esta es mi nueva nota desde rest"
+    "content": "Creando una nota sin important desde rest"
 }
 
 

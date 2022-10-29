@@ -4,14 +4,14 @@ import './mongo.js'
 import express, { json } from 'express'
 import cors from 'cors'
 import { Note } from './models/Note.js'
+import { notFound } from './middleware/notFound.js'
+import { handleErrors } from './middleware/handleErrors.js'
 dotenv.config()
 
 const app = express()
 app.use(cors())
 // Esto es necesario para la petición POST
 app.use(json())
-
-let notes = [{}]
 
 app.get('/', (req, res) => {
   res.send('<h1>Hello world! My API is working</h1>')
@@ -31,66 +31,74 @@ app.get('/api/notes', async (req, res) => {
 })
 
 // Obtener una nota
-app.get('/api/notes/:id', (req, res) => {
-  const id = Number(req.params.id)
-  const note = notes.find((note) => note.id === id)
-
-  note ? res.json(note) : res.status(404).end()
+app.get('/api/notes/:id', async (req, res, next) => {
+  const { id } = req.params
+  try {
+    const note = await Note.findById(id)
+    console.log(note)
+    if (note) {
+      return res.json(note)
+    } else {
+      res.status(404).end()
+    }
+  } catch (error) {
+    console.log(error)
+    next(error)
+  }
 })
 
 // Eliminar una nota
-app.delete('/api/notes/:id', (req, res) => {
-  const id = Number(req.params.id)
-  notes = notes.filter((note) => note.id !== id)
-  res.json(notes)
+app.delete('/api/notes/:id', async (req, res, next) => {
+  const { id } = req.params
+  try {
+    await Note.findByIdAndRemove(id)
+    res.status(204).end()
+  } catch (error) {
+    next(error)
+  }
 })
 
 // Crear una nota
-app.post('/api/notes', (req, res) => {
-  let newNote = req.body
-
+app.post('/api/notes', async (req, res, next) => {
+  const newNote = req.body
   if (!newNote || !newNote.content) {
     return res.status(400).json({
       error: 'No content was supplied'
     })
   }
 
-  const notesID = notes.map((note) => note.id)
-  const maxNotesID = Math.max(...notesID)
-
-  newNote = {
-    id: maxNotesID + 1,
-    ...newNote,
-    date: new Date(),
-    important: newNote.important ?? false
+  try {
+    const note = new Note({
+      ...newNote,
+      date: new Date(),
+      important: newNote.important ?? false
+    })
+    res.status(201).json(await note.save())
+  } catch (error) {
+    next(error)
   }
-  notes = notes.concat(newNote)
-  res.status(201).json(newNote)
 })
 
 // Actualizar una nota
-app.put('/api/notes', (req, res) => {
+app.put('/api/notes', async (req, res, next) => {
   let noteToEdit = req.body
 
-  notes = notes.map(note => {
-    if (note.id === noteToEdit.id) {
-      noteToEdit = {
-        ...note,
-        ...noteToEdit,
-        date: new Date()
-      }
-      return noteToEdit
-    }
-    return note
-  })
+  noteToEdit = {
+    ...noteToEdit,
+    date: new Date()
+  }
 
-  res.json(noteToEdit)
+  try {
+    const updatedNote = await Note.findByIdAndUpdate(noteToEdit.id, { ...noteToEdit }, { new: true })
+    res.json(updatedNote).end()
+  } catch (error) {
+    next(error)
+  }
 })
 
-// 404
-app.use((req, res) => {
-  res.status(404).json({ error: 'Not found' })
-})
+// Middleware
+app.use(handleErrors)
+app.use(notFound)
 
 const PORT = process.env.PORT
 app.listen(PORT, () => {
